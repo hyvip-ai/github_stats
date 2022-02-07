@@ -1,61 +1,66 @@
 <script>
-	//name it fullt customizable
-  import { onMount } from "svelte";
   import Card from "./components/Card.svelte";
   let userData;
   let repoData = [];
-  let filteredRepos = []
-  let joining_date = ""
-  onMount(() => {
-    fetch(`https://api.github.com/users/hyvip-ai/repos?per_page=100`)
+  let filteredRepos = [];
+  let joining_date = "";
+  const fetchData = (e) => {
+    let username = document.getElementById('username').value
+    fetch(`https://api.github.com/users/${username}/repos?per_page=100`)
       .then((res) => res.json())
       .then((data) => {
         repoData = data;
-		filteredRepos = [...repoData]
+        filteredRepos = [...repoData];
       });
-  });
-  fetch(`https://api.github.com/users/hyvip-ai`)
-    .then((res) => res.json())
-    .then((data) => {
-      userData = data;
-	  joining_date = `${new Date(userData?.created_at).getDate()}/${new Date(userData?.created_at).getMonth()+1}/${new Date(userData?.created_at).getFullYear()}`
-	  
-    });
+    fetch(`https://api.github.com/users/${username}`)
+      .then((res) => res.json())
+      .then((data) => {
+        userData = data;
+        joining_date = `${new Date(userData?.created_at).getDate()}/${
+          new Date(userData?.created_at).getMonth() + 1
+        }/${new Date(userData?.created_at).getFullYear()}`;
+      });
+  };
   const filterRepos = (e) => {
-	  
-	  filteredRepos = repoData.filter(repo=>{
-		  return repo.name.toLowerCase().includes(e.target.value.toLowerCase())
-	  })
-	  
+    filteredRepos = repoData.filter((repo) => {
+      return repo.name.toLowerCase().includes(e.target.value.toLowerCase());
+    });
   };
 </script>
 
-<main>
-  <h1>HYVIP-AI GITHUB RESULTS</h1>
-  <div
-    style="display: flex; justify-content: space-between; align-items: center;margin-top: 25px;"
-  >
-    <div style="width: 45%;">
-      <img src={userData?.avatar_url} alt="Rajat Mondal" />
+{#if repoData.length}
+  <main>
+    <h1>{userData?.login} GITHUB RESULTS</h1>
+    <div
+      style="display: flex; justify-content: space-between; align-items: center;margin-top: 25px;"
+    >
+      <div style="width: 45%;">
+        <img src={userData?.avatar_url} alt={userData?.name} />
+      </div>
+      <div style="width: 45%;">
+        <p>NAME : {userData?.name}</p>
+        <p>BIO : {userData?.bio}</p>
+        <p>BLOG : <a href={userData?.blog}>{userData?.blog}</a></p>
+        <p>Company : {userData?.company}</p>
+        <p>Location : {userData?.location}</p>
+        <p>Public Repos : {userData?.public_repos}</p>
+        <p>JOINED : {joining_date}</p>
+      </div>
     </div>
-    <div style="width: 45%;">
-      <p>NAME : {userData?.name}</p>
-      <p>BIO : {userData?.bio}</p>
-      <p>BLOG : <a href={userData?.blog}>{userData?.blog}</a></p>
-      <p>Company : {userData?.company}</p>
-      <p>Location : {userData?.location}</p>
-      <p>Public Repos : {userData?.public_repos}</p>
-	  <p>JOINED : {joining_date}</p>
+    <h1>MY REPOS</h1>
+    <input type="text" placeholder="SEARCH REPOS..." on:input={filterRepos} />
+    <div class="cards">
+      {#each filteredRepos as repo}
+        <Card {repo} />
+      {/each}
     </div>
-  </div>
-  <h1>MY REPOS</h1>
-  <input type="text" placeholder="SEARCH REPOS..." on:input={filterRepos} />
-  <div class="cards">
-    {#each filteredRepos as repo}
-      <Card {repo} />
-    {/each}
-  </div>
-</main>
+  </main>
+{:else}
+  <main>
+    <input type="text" placeholder="Enter Your Github User-Name Here ....." id="username" />
+    <button on:click={fetchData}>Get Data</button>
+  </main>
+{/if}
 
 <style>
   main {
